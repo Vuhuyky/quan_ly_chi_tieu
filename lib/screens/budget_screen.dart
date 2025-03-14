@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../widgets/animated_pie_chart.dart';
-import '../theme/app_theme.dart';
 import '../models/expense_data.dart';
 
 class BudgetScreen extends StatefulWidget {
@@ -10,7 +9,8 @@ class BudgetScreen extends StatefulWidget {
   State<BudgetScreen> createState() => _BudgetScreenState();
 }
 
-class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderStateMixin {
+class _BudgetScreenState extends State<BudgetScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool isExpense = true; // true: khoản chi, false: thu nhập
 
@@ -55,13 +55,10 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
             children: [
               const Text(
                 'Báo cáo tài chính',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
-              
+
               // Tab chuyển đổi
               Container(
                 padding: const EdgeInsets.all(4),
@@ -85,22 +82,31 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: isExpense ? const Color(0xFF6E3AE3) : Colors.transparent,
+                            color:
+                                isExpense
+                                    ? const Color(0xFF6E3AE3)
+                                    : Colors.transparent,
                             borderRadius: BorderRadius.circular(25),
-                            boxShadow: isExpense ? [
-                              BoxShadow(
-                                color: const Color(0xFF6E3AE3).withOpacity(0.3),
-                                spreadRadius: 1,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ] : null,
+                            boxShadow:
+                                isExpense
+                                    ? [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF6E3AE3,
+                                        ).withOpacity(0.3),
+                                        spreadRadius: 1,
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                    : null,
                           ),
                           child: Center(
                             child: Text(
                               'Khoản chi',
                               style: TextStyle(
-                                color: isExpense ? Colors.white : Colors.black54,
+                                color:
+                                    isExpense ? Colors.white : Colors.black54,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -114,22 +120,31 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           decoration: BoxDecoration(
-                            color: !isExpense ? const Color(0xFF6E3AE3) : Colors.transparent,
+                            color:
+                                !isExpense
+                                    ? const Color(0xFF6E3AE3)
+                                    : Colors.transparent,
                             borderRadius: BorderRadius.circular(25),
-                            boxShadow: !isExpense ? [
-                              BoxShadow(
-                                color: const Color(0xFF6E3AE3).withOpacity(0.3),
-                                spreadRadius: 1,
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ] : null,
+                            boxShadow:
+                                !isExpense
+                                    ? [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF6E3AE3,
+                                        ).withOpacity(0.3),
+                                        spreadRadius: 1,
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                    : null,
                           ),
                           child: Center(
                             child: Text(
                               'Thu nhập',
                               style: TextStyle(
-                                color: !isExpense ? Colors.white : Colors.black54,
+                                color:
+                                    !isExpense ? Colors.white : Colors.black54,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -225,18 +240,38 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
                         ],
                       ),
                       const SizedBox(height: 16),
-                      
+
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
                             children: [
                               if (isExpense) ...[
-                                _buildExpenseItem('Mua sắm', 120, const Color(0xFFFF8700)),
-                                _buildExpenseItem('Đăng ký hàng tháng', 80, const Color(0xFF6E3AE3)),
-                                _buildExpenseItem('Đồ ăn', 32, const Color(0xFFFF4757)),
+                                _buildExpenseItem(
+                                  'Mua sắm',
+                                  120,
+                                  const Color(0xFFFF8700),
+                                ),
+                                _buildExpenseItem(
+                                  'Đăng ký hàng tháng',
+                                  80,
+                                  const Color(0xFF6E3AE3),
+                                ),
+                                _buildExpenseItem(
+                                  'Đồ ăn',
+                                  32,
+                                  const Color(0xFFFF4757),
+                                ),
                               ] else ...[
-                                _buildIncomeItem('Lương', 5000, const Color(0xFF00B894)),
-                                _buildIncomeItem('Thu nhập thụ động', 1000, const Color(0xFF2D3436)),
+                                _buildIncomeItem(
+                                  'Lương',
+                                  5000,
+                                  const Color(0xFF00B894),
+                                ),
+                                _buildIncomeItem(
+                                  'Thu nhập thụ động',
+                                  1000,
+                                  const Color(0xFF2D3436),
+                                ),
                               ],
                             ],
                           ),
@@ -263,18 +298,13 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
               Text(
@@ -307,18 +337,13 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w500),
                 ),
               ),
               Text(
@@ -340,4 +365,4 @@ class _BudgetScreenState extends State<BudgetScreen> with SingleTickerProviderSt
       ),
     );
   }
-} 
+}

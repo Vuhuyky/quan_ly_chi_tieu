@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../models/transaction.dart';
 
 class TransactionsScreen extends StatelessWidget {
   const TransactionsScreen({super.key});
@@ -15,10 +14,7 @@ class TransactionsScreen extends StatelessWidget {
             children: [
               const Text(
                 'Xem báo cáo tài chính của bạn',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Row(
@@ -73,10 +69,7 @@ class TransactionsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterButton({
-    required bool isSelected,
-    required String title,
-  }) {
+  Widget _buildFilterButton({required bool isSelected, required String title}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
@@ -140,10 +133,7 @@ class TransactionsScreen extends StatelessWidget {
                 ),
                 Text(
                   time,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
               ],
             ),
@@ -160,4 +150,4 @@ class TransactionsScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}
