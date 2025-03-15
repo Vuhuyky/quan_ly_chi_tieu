@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/screens/add_trans.dart';
+import 'package:quan_ly_chi_tieu/screens/transactions_screen.dart';
 import 'home_screen.dart';
-import 'transactions_screen.dart';
 import 'budget_screen.dart';
 import 'profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
+  // _selectedIndex: 0: Trang chủ, 1: Giao dịch, 2: (chỗ trống cho nút +), 3: Ngân sách, 4: Hồ sơ.
   int _selectedIndex = 0;
 
+  // Danh sách các trang con (chỉ 4 trang – bỏ mục ở vị trí index 2 vì đó là chỗ dành cho nút “+”)
   final List<Widget> _screens = [
     const HomeScreen(),
-    const TransactionsScreen(),
+    const TransactionScreen(),
     const BudgetScreen(),
     const ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    // Map _selectedIndex: nếu _selectedIndex < 2 thì dùng trực tiếp; nếu >= 3, thì dùng _selectedIndex - 1
+    int screenIndex = _selectedIndex < 2 ? _selectedIndex : _selectedIndex - 1;
+
     return Scaffold(
-      body: _screens[_selectedIndex >= 3 ? _selectedIndex - 1 : _selectedIndex],
+      body: _screens[screenIndex],
       floatingActionButton: Container(
         height: 65,
         width: 65,
@@ -45,7 +52,12 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: FloatingActionButton(
           onPressed: () {
-            // TODO: Hiển thị dialog thêm giao dịch nếu cần
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AddTransactionScreen(),
+              ),
+            );
           },
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -54,17 +66,17 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.only(
+        decoration: const BoxDecoration(
+          color: Colors.white, // Nền trắng tinh
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black12,
               blurRadius: 20,
-              offset: const Offset(0, -5),
+              offset: Offset(0, -5),
             ),
           ],
         ),
@@ -74,18 +86,15 @@ class _MainScreenState extends State<MainScreen> {
             topRight: Radius.circular(20),
           ),
           child: BottomNavigationBar(
+            backgroundColor: Colors.white, // Explicitly set background white
             currentIndex: _selectedIndex,
             onTap: (index) {
+              // Nếu nhấn mục index 2 (dành cho nút “+”), không làm gì
+              if (index == 2) return;
               setState(() {
-                if (index == 2) {
-                  // TODO: Hiển thị dialog thêm giao dịch nếu cần
-                } else {
-                  _selectedIndex = index;
-                }
+                _selectedIndex = index;
               });
             },
-            backgroundColor: Colors.transparent,
-            elevation: 0,
             type: BottomNavigationBarType.fixed,
             selectedItemColor: const Color(0xFF6E3AE3),
             unselectedItemColor: Colors.grey[400],

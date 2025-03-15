@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -18,33 +19,17 @@ class ProfileScreen extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: Colors.grey[200],
                 ),
-                child: const Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.grey,
-                ),
+                child: const Icon(Icons.person, size: 50, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Tai Khoan',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                'Tài Khoản',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
-              _buildMenuItem(
-                icon: Icons.person,
-                title: 'Về của tôi',
-              ),
-              _buildMenuItem(
-                icon: Icons.settings,
-                title: 'Cài đặt',
-              ),
-              _buildMenuItem(
-                icon: Icons.download,
-                title: 'Xuất dữ liệu',
-              ),
+              _buildMenuItem(icon: Icons.person, title: 'Về của tôi'),
+              _buildMenuItem(icon: Icons.settings, title: 'Cài đặt'),
+              _buildMenuItem(icon: Icons.download, title: 'Xuất dữ liệu'),
               _buildMenuItem(
                 icon: Icons.logout,
                 title: 'Đăng xuất',
@@ -76,10 +61,7 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: isDestructive ? Colors.red : Colors.purple,
-        ),
+        leading: Icon(icon, color: isDestructive ? Colors.red : Colors.purple),
         title: Text(
           title,
           style: TextStyle(
@@ -87,11 +69,14 @@ class ProfileScreen extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: const Icon(
-          Icons.chevron_right,
-          color: Colors.grey,
-        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: () {
+          if (isDestructive) {
+            FirebaseAuth.instance.signOut();
+          }
+          // Các chức năng khác có thể được xử lý ở đây.
+        },
       ),
     );
   }
-} 
+}

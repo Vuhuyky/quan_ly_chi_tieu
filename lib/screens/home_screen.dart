@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header với avatar và thông báo
+                // Header với avatar và lời chào
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -26,14 +26,11 @@ class HomeScreen extends StatelessWidget {
                             shape: BoxShape.circle,
                             color: Colors.grey[200],
                           ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Colors.grey,
-                          ),
+                          child: const Icon(Icons.person, color: Colors.grey),
                         ),
                         const SizedBox(width: 12),
                         const Text(
-                          'Xin chào !',
+                          'Xin chào!',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -48,8 +45,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Thu nhập và Khoản chi
+                // Thu nhập và khoản chi
                 Row(
                   children: [
                     Expanded(
@@ -72,14 +68,10 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Biểu đồ
+                // Biểu đồ tần suất chi tiêu (placeholder)
                 const Text(
                   'Tần suất chi tiêu',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -94,23 +86,21 @@ class HomeScreen extends StatelessWidget {
                     child: Text('Biểu đồ sẽ được thêm vào đây'),
                   ),
                 ),
-
-                // Danh mục chi tiêu
                 const SizedBox(height: 16),
+                // Danh mục chi tiêu (Chip)
                 Row(
                   children: [
-                    _buildCategoryChip('Mua...', isSelected: true),
+                    _buildCategoryChip('Mua sắm', isSelected: true),
                     const SizedBox(width: 8),
-                    _buildCategoryChip('Đăng...'),
+                    _buildCategoryChip('Đăng ký'),
                     const SizedBox(width: 8),
                     _buildCategoryChip('Đồ ăn'),
                     const SizedBox(width: 8),
-                    _buildCategoryChip('Di...'),
+                    _buildCategoryChip('Đi lại'),
                   ],
                 ),
-
-                // Giao dịch gần đây
                 const SizedBox(height: 24),
+                // Giao dịch gần đây (placeholder)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -131,6 +121,7 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
+                // Một vài giao dịch mẫu
                 _buildTransactionItem(
                   'Mua sắm',
                   'Mua một số hàng tạp hóa',
@@ -142,7 +133,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildTransactionItem(
                   'Đăng ký hàng tháng',
-                  'Disney+ Annual...',
+                  'Disney+ Annual',
                   '09:30 PM',
                   -80,
                   Colors.purple,
@@ -165,7 +156,12 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBalanceCard(String title, String amount, Color color, IconData icon) {
+  Widget _buildBalanceCard(
+    String title,
+    String amount,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -189,10 +185,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.black54),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -273,10 +266,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
               ],
             ),
@@ -294,10 +284,7 @@ class HomeScreen extends StatelessWidget {
               ),
               Text(
                 time,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
               ),
             ],
           ),
@@ -305,4 +292,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-} 
+}

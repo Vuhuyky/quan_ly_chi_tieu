@@ -35,17 +35,17 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       User? user = credential.user;
       if (user != null) {
-        await user.reload(); // Cập nhật trạng thái user từ Firebase
+        await user.reload(); // Cập nhật lại thông tin user
         user = FirebaseAuth.instance.currentUser;
         if (user != null && !user.emailVerified) {
+          // Email chưa xác nhận
           setState(() {
             _errorMessage =
-                "Tài khoản của bạn chưa được xác nhận. Vui lòng xác nhận email để đăng nhập.";
+                "Tài khoản của bạn chưa được xác nhận. Vui lòng xác nhận email.";
           });
-          // Không điều hướng, chỉ hiển thị thông báo lỗi
           return;
         }
-        // Nếu email đã được xác nhận, chuyển sang MainScreen.
+        // Đã xác nhận -> chuyển sang MainScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainScreen()),
@@ -56,9 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = "Đăng nhập thất bại: ${e.message}";
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -82,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(title: const Text("Đăng nhập")),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: Column(
             children: [
               Text(

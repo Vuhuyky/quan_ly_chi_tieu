@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:quan_ly_chi_tieu/auth/login_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -33,21 +32,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
     setState(() => _isLoading = true);
     try {
-      // Tạo tài khoản nhưng chưa xác thực
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
-      // Gửi link xác nhận email
       await userCredential.user?.sendEmailVerification();
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Đã gửi email xác nhận. Vui lòng kiểm tra hộp thư."),
         ),
       );
-      Navigator.pop(context); // Quay lại màn hình đăng nhập
+      Navigator.pop(context); // Quay lại LoginScreen
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -63,7 +59,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       appBar: AppBar(title: const Text("Đăng ký")),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
           child: Column(
             children: [
               Text(
@@ -160,13 +156,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed:
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoginScreen(),
-                      ),
-                    ),
+                onPressed: () => Navigator.pop(context),
                 child: const Text("Đã có tài khoản? Đăng nhập"),
               ),
             ],
