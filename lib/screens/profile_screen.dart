@@ -27,13 +27,39 @@ class ProfileScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
-              _buildMenuItem(icon: Icons.person, title: 'Về của tôi'),
-              _buildMenuItem(icon: Icons.settings, title: 'Cài đặt'),
-              _buildMenuItem(icon: Icons.download, title: 'Xuất dữ liệu'),
+              _buildMenuItem(
+                icon: Icons.person,
+                title: 'Về của tôi',
+                onTap: () {
+                  // TODO: Điều hướng đến trang "Về của tôi"
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.settings,
+                title: 'Cài đặt',
+                onTap: () {
+                  // TODO: Điều hướng đến trang Cài đặt
+                },
+              ),
+              _buildMenuItem(
+                icon: Icons.download,
+                title: 'Xuất dữ liệu',
+                onTap: () {
+                  // TODO: Xử lý chức năng xuất dữ liệu
+                },
+              ),
               _buildMenuItem(
                 icon: Icons.logout,
                 title: 'Đăng xuất',
                 isDestructive: true,
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  // Sau khi đăng xuất, điều hướng đến màn hình đăng nhập.
+                  // Nếu bạn đã định nghĩa route '/login', sử dụng:
+                  Navigator.of(context).pushReplacementNamed('/login');
+                  // Hoặc thay thế bằng:
+                  // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                },
               ),
             ],
           ),
@@ -46,6 +72,7 @@ class ProfileScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     bool isDestructive = false,
+    required VoidCallback onTap,
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -70,12 +97,7 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-        onTap: () {
-          if (isDestructive) {
-            FirebaseAuth.instance.signOut();
-          }
-          // Các chức năng khác có thể được xử lý ở đây.
-        },
+        onTap: onTap,
       ),
     );
   }

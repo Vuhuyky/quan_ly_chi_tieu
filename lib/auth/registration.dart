@@ -22,6 +22,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   bool _isConfirmPasswordVisible = false;
 
   Future<void> _registerWithEmail() async {
+    // Kiểm tra mật khẩu khớp
     if (_passwordController.text.trim() !=
         _confirmPasswordController.text.trim()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,19 +32,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     }
 
     setState(() => _isLoading = true);
+
     try {
+      // Tạo tài khoản
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
+
+      // Cập nhật displayName nếu user nhập tên
+      if (_nameController.text.trim().isNotEmpty) {
+        await userCredential.user?.updateDisplayName(
+          _nameController.text.trim(),
+        );
+        await userCredential.user?.reload(); // Tải lại thông tin user
+      }
+
+      // Gửi email xác nhận
       await userCredential.user?.sendEmailVerification();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Đã gửi email xác nhận. Vui lòng kiểm tra hộp thư."),
         ),
       );
-      Navigator.pop(context); // Quay lại LoginScreen
+
+      // Quay lại LoginScreen
+      Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(
         context,
@@ -67,6 +82,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 24),
+
+              // Nhập Tên
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
@@ -79,6 +96,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
+              // Nhập Email
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -91,6 +110,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
+              // Nhập Mật khẩu
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
@@ -116,6 +137,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
+
+              // Xác nhận mật khẩu
               TextField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
@@ -142,6 +165,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 onSubmitted: (_) => _registerWithEmail(),
               ),
               const SizedBox(height: 24),
+
               _isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
@@ -155,6 +179,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                     child: const Text("Đăng ký"),
                   ),
               const SizedBox(height: 16),
+
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text("Đã có tài khoản? Đăng nhập"),

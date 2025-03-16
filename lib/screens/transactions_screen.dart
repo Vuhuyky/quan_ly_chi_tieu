@@ -14,7 +14,7 @@ class TransactionScreen extends StatefulWidget {
 class _TransactionScreenState extends State<TransactionScreen> {
   final user = FirebaseAuth.instance.currentUser;
 
-  // Dropdown chọn tháng/năm
+  // Dropdown chọn tháng/năm (nếu cần lọc)
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
 
@@ -30,7 +30,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Row chọn tháng, năm
+            // Nếu cần, có thể thêm dropdown chọn tháng/năm ở đây
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -69,20 +69,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Dùng Expanded + StreamBuilder
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream:
                     FirebaseFirestore.instance
                         .collection("transactions")
                         .where("userId", isEqualTo: user!.uid)
-                        .where("year", isEqualTo: _selectedYear) // lọc theo năm
-                        .where(
-                          "month",
-                          isEqualTo: _selectedMonth,
-                        ) // lọc theo tháng
-                        // Nếu muốn sắp xếp cục bộ, ta bỏ orderBy
-                        // Nếu muốn orderBy Firestore, ta cần index:
+                        .where("year", isEqualTo: _selectedYear)
+                        .where("month", isEqualTo: _selectedMonth)
+                        // Nếu dùng orderBy("date"), bạn cần tạo composite index
                         // .orderBy("date", descending: true)
                         .snapshots(),
                 builder: (context, snapshot) {
@@ -102,10 +97,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           .map((doc) => TransactionModel.fromFirestore(doc))
                           .toList();
 
-                  // Sắp xếp cục bộ theo date (giảm dần) nếu cần
+                  // Sắp xếp cục bộ theo date giảm dần
                   allTransactions.sort((a, b) => b.date.compareTo(a.date));
 
-                  // Tách thành 2 danh sách: chi (expense) và thu (income)
+                  // Tách thành 2 danh sách: expense và income
                   final expenseList =
                       allTransactions
                           .where((t) => t.type == 'expense')
@@ -117,7 +112,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Tiêu đề
                         const Text(
                           "Xem báo cáo tài chính của bạn",
                           style: TextStyle(
@@ -126,8 +120,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-
-                        // Phần Khoản Chi
                         const Text(
                           "Khoản Chi",
                           style: TextStyle(
@@ -149,8 +141,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // Phần Thu nhập
                         const Text(
                           "Thu nhập",
                           style: TextStyle(
@@ -183,20 +173,19 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  // Hàm xây dựng 1 item giao dịch
+  /// Hàm xây dựng 1 item giao dịch
   Widget _buildTransactionItem(TransactionModel t, {required bool isExpense}) {
-    // Icon + màu
     final iconBgColor = isExpense ? Colors.red[50] : Colors.green[50];
     final iconColor = isExpense ? Colors.red : Colors.green;
     final sign = isExpense ? "-" : "+";
     final amountColor = isExpense ? Colors.red : Colors.green;
 
-    // Thời gian (HH:mm AM/PM)
     final timeString = DateFormat.jm().format(t.date);
-
-    // Subtitle
+    // Nếu mô tả rỗng, thay bằng ngày (định dạng dd/MM)
     final subtitle =
-        t.description.isNotEmpty ? t.description : "Không có mô tả";
+        t.description.isNotEmpty
+            ? t.description
+            : DateFormat('dd/MM').format(t.date);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -215,7 +204,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       child: Row(
         children: [
-          // Icon + background
+          // Icon + nền
           Container(
             width: 40,
             height: 40,
@@ -224,14 +213,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              // Tùy biến icon theo category nếu muốn
               isExpense ? Icons.shopping_bag : Icons.attach_money,
               color: iconColor,
             ),
           ),
-          const SizedBox(width: 12),
-
-          // Title + Subtitle
+          const SizedBox(width: 16),
+          // Danh mục + mô tả
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,8 +237,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
           ),
-
-          // Time + Amount
+          // Số tiền + giờ
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
