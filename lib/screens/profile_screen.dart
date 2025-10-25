@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'about_me_screen.dart';
 import 'settings_screen.dart';
 import 'export_data_screen.dart';
-import '../auth/auth_wrapper.dart'; // Đường dẫn đến nơi xử lý đăng xuất, nếu có
+import 'chat_screen.dart'; // <-- 1. IMPORT CHAT SCREEN
+import '../auth/auth_wrapper.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -10,9 +11,11 @@ class ProfileScreen extends StatelessWidget {
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    Navigator.pushReplacement(
+    // Dùng pushAndRemoveUntil để xoá hết các màn hình cũ khi đăng xuất
+    Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const AuthWrapper()),
+      (route) => false, // Xoá tất cả route
     );
   }
 
@@ -52,6 +55,19 @@ class ProfileScreen extends StatelessWidget {
           );
         },
       ),
+      // --- 2. THÊM NÚT MỚI Ở ĐÂY ---
+      _ProfileOption(
+        icon: Icons.auto_awesome, // Icon cho AI
+        title: 'Tư vấn AI (Gemini)',
+        color: Colors.blue.shade400, // Màu khác cho nổi bật
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ChatScreen()),
+          );
+        },
+      ),
+      // -----------------------------
       _ProfileOption(
         icon: Icons.logout,
         title: 'Đăng xuất',
@@ -61,7 +77,7 @@ class ProfileScreen extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.grey[50], // Giữ lại màu nền
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -94,10 +110,9 @@ class ProfileScreen extends StatelessWidget {
                         title: Text(
                           option.title,
                           style: TextStyle(
+                            // Sửa lại logic màu để tương thích DarkMode
                             color:
-                                option.color == Colors.red
-                                    ? Colors.red
-                                    : Colors.black,
+                                option.color == Colors.red ? Colors.red : null,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -116,6 +131,7 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
+// Class trợ giúp (giữ nguyên)
 class _ProfileOption {
   final IconData icon;
   final String title;

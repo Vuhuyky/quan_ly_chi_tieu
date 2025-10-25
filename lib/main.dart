@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_analytics/observer.dart';
+// import 'package:firebase_analytics/firebase_analytics.dart';
+// import 'package:firebase_analytics/observer.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 import 'auth/auth_wrapper.dart';
@@ -9,11 +9,17 @@ import 'theme/app_theme.dart';
 import 'theme/theme_manager.dart';
 import 'package:device_preview/device_preview.dart';
 
+// === THÊM IMPORT NÀY ===
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 🚀 Khởi tạo Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // === THÊM DÒNG NÀY ĐỂ LOAD API KEY TỪ FILE .env ===
+  await dotenv.load(fileName: ".env");
 
   // 🔗 Gắn Realtime Database URL (rất quan trọng!)
   final database = FirebaseDatabase.instanceFor(
