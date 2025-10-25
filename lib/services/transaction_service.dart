@@ -17,9 +17,10 @@ class TransactionService {
     if (user == null) {
       throw Exception("User is not logged in");
     }
-    await _db.collection("transactions").add({
+    final storedType = type.trim().toLowerCase();
+    final ref = await _db.collection("transactions").add({
       'userId': user.uid,
-      'type': type,
+      'type': storedType,
       'amount': amount,
       'category': category,
       'date': Timestamp.fromDate(date),
@@ -28,6 +29,7 @@ class TransactionService {
       'description': description,
       'createdAt': Timestamp.now(),
     });
+    print('DEBUG Transaction saved id=${ref.id} type=$storedType amount=$amount');
   }
 
   /// Lấy danh sách giao dịch theo tháng và năm

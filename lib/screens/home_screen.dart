@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:quan_ly_chi_tieu/screens/transactions_screen.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Model tạm cho Transaction
 class SimpleTransaction {
@@ -20,6 +24,60 @@ class SimpleTransaction {
     this.description,
     this.category,
   );
+  Map<String, dynamic> toMap() {
+    return {
+      'type': type,
+      'amount': amount,
+      'date': date.millisecondsSinceEpoch,
+      'description': description,
+      'category': category,
+    };
+  }
+
+  factory SimpleTransaction.fromMap(Map<String, dynamic> map) {
+    final ts =
+        map['date'] != null
+            ? Timestamp.fromMillisecondsSinceEpoch(map['date'])
+            : null;
+    return SimpleTransaction(
+      map['type'] ?? 'expense',
+      (map['amount'] ?? 0).toDouble(),
+      ts?.toDate() ?? DateTime.now(),
+      map['description'] ?? '',
+      map['category'] ?? 'Khác',
+    );
+    // final rawType = (map['type'] ?? 'expense').toString();
+    // final normalizedType = rawType.trim().toLowerCase();
+    // return SimpleTransaction(
+    //   normalizedType,
+    //   (map['amount'] ?? 0).toDouble(),
+    //   ts?.toDate() ?? DateTime.now(),
+    //   map['description'] ?? '',
+    //   map['category'] ?? 'Khác',
+    // );
+  }
+}
+
+List<SimpleTransaction> _parseDocsInBackground(List<Map<String, dynamic>> raw) {
+  return raw.map((data) {
+    final ts = data['date'] as Timestamp?;
+    return SimpleTransaction(
+      data['type'] ?? 'expense',
+      (data['amount'] ?? 0).toDouble(),
+      ts?.toDate() ?? DateTime.now(),
+      data['description'] ?? '',
+      data['category'] ?? 'Khác',
+    );
+    // final rawType = (data['type'] ?? 'expense').toString();
+    // final normalizedType = rawType.trim().toLowerCase();
+    // return SimpleTransaction(
+    //   normalizedType,
+    //   (data['amount'] ?? 0).toDouble(),
+    //   ts?.toDate() ?? DateTime.now(),
+    //   data['description'] ?? '',
+    //   data['category'] ?? 'Khác',
+    // );
+  }).toList();
 }
 
 class HomeScreen extends StatefulWidget {
@@ -29,7 +87,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with AutomaticKeepAliveClientMixin<HomeScreen> {
   double _totalIncome = 0;
   double _totalExpense = 0;
   String _userName = "Người dùng";
@@ -44,17 +103,135 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isFirstHalf = true;
 
   List<SimpleTransaction> _allTransactions = [];
+  StreamSubscription<QuerySnapshot>? _transactionsSub;
+  Timer? _chartDebounce;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    _fetchHomeData();
+    // _fetchHomeData();
+    _loadCachedTransactions();
+    _subscribeOrFetch();
+  }
+
+  @override
+  void dispose() {
+    _transactionsSub?.cancel();
+    _chartDebounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadCachedTransactions() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('cached_transactions');
+      if (raw != null) {
+        final list = json.decode(raw) as List;
+        final txs =
+            list.map((e) {
+              final map = e as Map<String, dynamic>;
+              final ts =
+                  map['date'] != null
+                      ? Timestamp.fromMillisecondsSinceEpoch(map['date'])
+                      : null;
+              return SimpleTransaction(
+                map['type'] ?? 'expense',
+                (map['amount'] ?? 0).toDouble(),
+                ts?.toDate() ?? DateTime.now(),
+                map['description'] ?? '',
+                map['category'] ?? 'Khác',
+              );
+            }).toList();
+        if (!mounted) return;
+        setState(() {
+          _allTransactions = txs;
+          _totalIncome = txs
+              .where((t) => t.type == 'income')
+              .fold(0.0, (s, t) => s + t.amount);
+          _totalExpense = txs
+              .where((t) => t.type == 'expense')
+              .fold(0.0, (s, t) => s + t.amount);
+        });
+        _buildChartData();
+      }
+    } catch (_) {}
+  }
+
+  void _subscribeOrFetch() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _transactionsSub = FirebaseFirestore.instance
+        .collection('transactions')
+        .where('userId', isEqualTo: user.uid)
+        .orderBy('date', descending: true)
+        .limit(200)
+        .snapshots()
+        .listen(
+          (snap) async {
+            try {
+              final raw =
+                  snap.docs
+                      .map((d) => d.data() as Map<String, dynamic>)
+                      .toList();
+              final parsed = await compute(_parseDocsInBackground, raw);
+              if (!mounted) return;
+              setState(() {
+                _allTransactions = parsed;
+                _totalIncome = parsed
+                    .where((t) => t.type == 'income')
+                    .fold(0.0, (s, t) => s + t.amount);
+                _totalExpense = parsed
+                    .where((t) => t.type == 'expense')
+                    .fold(0.0, (s, t) => s + t.amount);
+                _isLoading = false;
+              });
+              _saveCache(parsed);
+              _scheduleBuildCharts();
+            } catch (_) {}
+          },
+          onError: (_) {
+            // xử lý lỗi nếu cần
+          },
+        );
+  }
+
+  void _scheduleBuildCharts() {
+    _chartDebounce?.cancel();
+    _chartDebounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _buildChartData();
+    });
+  }
+
+  Future<void> _saveCache(List<SimpleTransaction> txs) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = json.encode(
+        txs
+            .map(
+              (t) => {
+                'type': t.type,
+                'amount': t.amount,
+                'date': t.date.millisecondsSinceEpoch,
+                'description': t.description,
+                'category': t.category,
+              },
+            )
+            .toList(),
+      );
+      await prefs.setString('cached_transactions', raw);
+    } catch (_) {}
   }
 
   Future<void> _fetchHomeData() async {
     setState(() => _isLoading = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
+      if (!mounted) return;
       setState(() => _isLoading = false);
       return;
     }
@@ -85,12 +262,21 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       allTx.add(SimpleTransaction(type, amount, date, desc, cat));
     }
-    _totalIncome = income;
-    _totalExpense = expense;
-    _allTransactions = allTx;
+    if (!mounted) return;
+    // _totalIncome = income;
+    // _totalExpense = expense;
+    // _allTransactions = allTx;
+    setState(() {
+      _totalIncome = income;
+      _totalExpense = expense;
+      _allTransactions = allTx;
+      _isLoading = false;
+    });
 
+    if (!mounted) return;
     _buildChartData();
-    setState(() => _isLoading = false);
+    // _buildChartData();
+    // setState(() => _isLoading = false);
   }
 
   void _buildChartData() {
@@ -107,16 +293,20 @@ class _HomeScreenState extends State<HomeScreen> {
     int startMonth = _isFirstHalf ? 1 : 7;
     int endMonth = _isFirstHalf ? 6 : 12;
 
-    final Map<int, double> monthlyExpense = {};
-    for (int m = startMonth; m <= endMonth; m++) {
-      monthlyExpense[m] = 0;
-    }
+    // Tạo map với giá trị mặc định 0.0
+    final Map<int, double> monthlyExpense = {
+      for (int m = startMonth; m <= endMonth; m++) m: 0.0,
+    };
+    // for (int m = startMonth; m <= endMonth; m++) {
+    //   monthlyExpense[m] = 0;
+    // }
 
     for (var tx in _allTransactions) {
       if (tx.type == 'expense' && tx.date.year == year) {
         final m = tx.date.month;
         if (m >= startMonth && m <= endMonth) {
-          monthlyExpense[m] = (monthlyExpense[m] ?? 0) + tx.amount;
+          // monthlyExpense[m] = (monthlyExpense[m] ?? 0) + tx.amount;
+          monthlyExpense[m] = monthlyExpense[m]! + tx.amount;
         }
       }
     }
@@ -143,27 +333,39 @@ class _HomeScreenState extends State<HomeScreen> {
     int month = _selectedMonth;
     int lastDay = DateTime(year, month + 1, 0).day;
 
-    final Map<int, double> dailyExpense = {};
-    for (int d = 1; d <= lastDay; d++) {
-      dailyExpense[d] = 0;
-    }
+    // final Map<int, double> dailyExpense = {};
+    // for (int d = 1; d <= lastDay; d++) {
+    //   dailyExpense[d] = 0;
+    // }
+    final Map<int, double> dailyExpense = {
+      for (int d = 1; d <= lastDay; d++) d: 0.0,
+    };
 
     for (var tx in _allTransactions) {
       if (tx.type == 'expense' &&
           tx.date.year == year &&
           tx.date.month == month) {
         dailyExpense[tx.date.day] =
-            (dailyExpense[tx.date.day] ?? 0) + tx.amount;
+            // (dailyExpense[tx.date.day] ?? 0) + tx.amount;
+            dailyExpense[tx.date.day]! + tx.amount;
       }
     }
-    final List<FlSpot> spots = [];
-    for (int d = 1; d <= lastDay; d++) {
-      spots.add(FlSpot((d - 1).toDouble(), dailyExpense[d] ?? 0));
-    }
+    final List<FlSpot> spots = List<FlSpot>.generate(
+      lastDay,
+      (i) => FlSpot(i.toDouble(), dailyExpense[i + 1] ?? 0.0),
+    );
+    // for (int d = 1; d <= lastDay; d++) {
+    //   spots.add(FlSpot((d - 1).toDouble(), dailyExpense[d] ?? 0));
+    // }
     double maxY = 0;
     for (var s in spots) {
       if (s.y > maxY) maxY = s.y;
     }
+    // setState(() {
+    //   _lineSpots = spots;
+    //   _maxY = maxY;
+    // });
+    if (!mounted) return;
     setState(() {
       _lineSpots = spots;
       _maxY = maxY;
@@ -547,6 +749,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       body: SafeArea(
         child:

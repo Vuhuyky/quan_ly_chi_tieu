@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:quan_ly_chi_tieu/models/transaction.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({Key? key}) : super(key: key);
@@ -14,9 +15,51 @@ class TransactionScreen extends StatefulWidget {
 class _TransactionScreenState extends State<TransactionScreen> {
   final user = FirebaseAuth.instance.currentUser;
 
-  // Dropdown chọn tháng/năm (nếu cần lọc)
+  final List<String> categories = [
+    'Tất cả',
+    'Ăn uống',
+    'Di chuyển',
+    'Giải trí',
+    'Mua sắm',
+    'Học tập',
+    'Y tế',
+    'Thể thao',
+    'Nhà cửa',
+    'Du lịch',
+    'Khác',
+  ];
+
+  String selectedCategory = 'Tất cả';
+
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
+
+  IconData getCategoryIcon(String category) {
+    switch (category) {
+      case 'Ăn uống':
+        return FontAwesomeIcons.utensils;
+      case 'Di chuyển':
+        return FontAwesomeIcons.bus;
+      case 'Giải trí':
+        return FontAwesomeIcons.film;
+      case 'Mua sắm':
+        return FontAwesomeIcons.shoppingBag;
+      case 'Học tập':
+        return FontAwesomeIcons.bookOpen;
+      case 'Y tế':
+        return FontAwesomeIcons.briefcaseMedical;
+      case 'Thể thao':
+        return FontAwesomeIcons.football;
+      case 'Nhà cửa':
+        return FontAwesomeIcons.house;
+      case 'Du lịch':
+        return FontAwesomeIcons.plane;
+      case 'Khác':
+        return Icons.more_horiz;
+      default:
+        return Icons.category;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +73,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Nếu cần, có thể thêm dropdown chọn tháng/năm ở đây
+            // Bộ lọc tháng và năm
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -69,6 +112,25 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            // Bộ lọc danh mục
+            DropdownButton<String>(
+              value: selectedCategory,
+              items:
+                  categories
+                      .map(
+                        (cat) => DropdownMenuItem(value: cat, child: Text(cat)),
+                      )
+                      .toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value!;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            // Danh sách giao dịch
+            // ...existing code...
+            // Danh sách giao dịch
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream:
@@ -77,8 +139,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         .where("userId", isEqualTo: user!.uid)
                         .where("year", isEqualTo: _selectedYear)
                         .where("month", isEqualTo: _selectedMonth)
-                        // Nếu dùng orderBy("date"), bạn cần tạo composite index
-                        // .orderBy("date", descending: true)
                         .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
@@ -87,26 +147,60 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+
+                  final docs = snapshot.data?.docs ?? [];
+                  if (docs.isEmpty) {
                     return const Center(child: Text("Không có giao dịch"));
                   }
 
-                  // Chuyển dữ liệu Firestore -> List<TransactionModel>
+                  // Chuyển docs -> model và sort giảm dần
                   final allTransactions =
-                      snapshot.data!.docs
+                      docs
                           .map((doc) => TransactionModel.fromFirestore(doc))
-                          .toList();
+                          .toList()
+                        ..sort((a, b) => b.date.compareTo(a.date));
 
-                  // Sắp xếp cục bộ theo date giảm dần
-                  allTransactions.sort((a, b) => b.date.compareTo(a.date));
-
-                  // Tách thành 2 danh sách: expense và income
+                  // Phân loại (chuẩn hoá type)
                   final expenseList =
                       allTransactions
-                          .where((t) => t.type == 'expense')
+                          .where(
+                            (t) =>
+                                t.type.toString().trim().toLowerCase() ==
+                                'expense',
+                          )
                           .toList();
                   final incomeList =
-                      allTransactions.where((t) => t.type == 'income').toList();
+                      allTransactions
+                          .where(
+                            (t) =>
+                                t.type.toString().trim().toLowerCase() ==
+                                'income',
+                          )
+                          .toList();
+
+                  // Lọc theo danh mục
+                  final filteredExpenseList =
+                      selectedCategory == 'Tất cả'
+                          ? expenseList
+                          : expenseList
+                              .where((t) => t.category == selectedCategory)
+                              .toList();
+                  final filteredIncomeList =
+                      selectedCategory == 'Tất cả'
+                          ? incomeList
+                          : incomeList
+                              .where((t) => t.category == selectedCategory)
+                              .toList();
+
+                  // Tính tổng
+                  final totalExpense = filteredExpenseList.fold<double>(
+                    0.0,
+                    (sum, t) => sum + t.amount,
+                  );
+                  final totalIncome = filteredIncomeList.fold<double>(
+                    0.0,
+                    (sum, t) => sum + t.amount,
+                  );
 
                   return SingleChildScrollView(
                     child: Column(
@@ -120,6 +214,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        Text(
+                          "Tổng chi: -\$${totalExpense.toStringAsFixed(0)}    Tổng thu: +\$${totalIncome.toStringAsFixed(0)}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         const Text(
                           "Khoản Chi",
                           style: TextStyle(
@@ -132,10 +234,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: expenseList.length,
+                          itemCount: filteredExpenseList.length,
                           itemBuilder: (context, index) {
                             return _buildTransactionItem(
-                              expenseList[index],
+                              filteredExpenseList[index],
                               isExpense: true,
                             );
                           },
@@ -153,10 +255,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          itemCount: incomeList.length,
+                          itemCount: filteredIncomeList.length,
                           itemBuilder: (context, index) {
                             return _buildTransactionItem(
-                              incomeList[index],
+                              filteredIncomeList[index],
                               isExpense: false,
                             );
                           },
@@ -173,7 +275,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  /// Hàm xây dựng 1 item giao dịch
   Widget _buildTransactionItem(TransactionModel t, {required bool isExpense}) {
     final iconBgColor = isExpense ? Colors.red[50] : Colors.green[50];
     final iconColor = isExpense ? Colors.red : Colors.green;
@@ -181,7 +282,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final amountColor = isExpense ? Colors.red : Colors.green;
 
     final timeString = DateFormat.jm().format(t.date);
-    // Nếu mô tả rỗng, thay bằng ngày (định dạng dd/MM)
     final subtitle =
         t.description.isNotEmpty
             ? t.description
@@ -204,7 +304,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
       ),
       child: Row(
         children: [
-          // Icon + nền
           Container(
             width: 40,
             height: 40,
@@ -213,12 +312,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              isExpense ? Icons.shopping_bag : Icons.attach_money,
+              getCategoryIcon(t.category),
               color: iconColor,
+              size: 20,
             ),
           ),
           const SizedBox(width: 16),
-          // Danh mục + mô tả
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +336,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
           ),
-          // Số tiền + giờ
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

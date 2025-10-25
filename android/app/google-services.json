@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "1085977171612",
-    "project_id": "pttk-aaf26",
-    "storage_bucket": "pttk-aaf26.firebasestorage.app"
+    "project_number": "317508043698",
+    "project_id": "btl-pttkpm",
+    "storage_bucket": "btl-pttkpm.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1085977171612:android:2e294eb80dbd03529aff59",
+        "mobilesdk_app_id": "1:317508043698:android:9a15c98293a47b34079aab",
         "android_client_info": {
           "package_name": "com.example.quan_ly_chi_tieu"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "1085977171612-28lla8avj21nhk0cp7bl4srmrap85la8.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDjGfbhDiDthBErCxnA2HgQcEvBFsc8AaE"
+          "current_key": "AIzaSyCX8RUoSM4tNWsKMhgM3wZOCRNC0CRS0jU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "1085977171612-28lla8avj21nhk0cp7bl4srmrap85la8.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }
